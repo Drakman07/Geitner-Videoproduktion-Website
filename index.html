@@ -844,6 +844,15 @@
     cursor: zoom-in;
     transition: max-height 0.3s ease;
   }
+  .gallery-iframe {
+    width: 100%;
+    max-width: 1000px;
+    aspect-ratio: 16 / 9;
+    max-height: 65vh;
+    border: none;
+    background: #000;
+    display: block;
+  }
   /* Expanded-Modus (Vollbild) */
   .gallery-overlay.expanded {
     padding: 0;
@@ -1005,6 +1014,16 @@
     /* Galerie auf Mobile: Pfeile ausblenden, Navigation nur per Swipe */
     .gallery-nav { display: none; }
     .gallery-img { max-height: 65vh; }
+    /* Bei Video-Galerie sind Swipes auf YouTube-iframe unzuverlässig (Player fängt sie ab)
+       → Pfeile bleiben sichtbar, leicht eingerückt am Rand */
+    .gallery-overlay.video-mode .gallery-nav {
+      display: flex;
+      background: rgba(0,0,0,0.7);
+      width: 38px;
+      height: 38px;
+    }
+    .gallery-overlay.video-mode .gallery-prev { left: 0.4rem; }
+    .gallery-overlay.video-mode .gallery-next { right: 0.4rem; }
   }
 
   /* ═══════════════════════════════════════════════
@@ -1422,6 +1441,11 @@
   <div class="gallery-main">
     <button class="gallery-nav gallery-prev" id="galleryPrev" aria-label="Vorheriges Bild">&#8592;</button>
     <img class="gallery-img" id="galleryImg" src="" alt="" loading="lazy">
+    <iframe class="gallery-iframe" id="galleryIframe" src="" title=""
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen
+            referrerpolicy="strict-origin-when-cross-origin"
+            style="display:none;"></iframe>
     <button class="gallery-nav gallery-next" id="galleryNext" aria-label="Nächstes Bild">&#8594;</button>
   </div>
   <p class="gallery-counter" id="galleryCounter" aria-live="polite"></p>
@@ -1472,24 +1496,56 @@
     business:  { title: 'BUSINESS & FIRMEN', tag: 'galerie-business' },
     kommunen:  { title: 'KOMMUNEN',          tag: 'galerie-kommunen' },
     natur:     { title: 'NATUR & LANDSCHAFT',tag: 'galerie-natur' },
-    videos:    { title: 'VIDEOS & BTS',      tag: 'galerie-videos' },
   };
+
+  // YouTube-Galerien: Du kannst hier komplette URLs ODER nur die 11-stellige Video-ID einfügen.
+  // Neues Video hinzufügen → einfach eine Zeile in den videoIds-Array werfen.
+  const youtubeGalleries = {
+    videos: {
+      title: 'VIDEOS & BTS',
+      videoIds: [
+        'https://www.youtube.com/watch?v=aZ8Cn8-Zh_Y',
+        'https://www.youtube.com/watch?v=nzC4dtox1hc',
+        'https://www.youtube.com/watch?v=TH9RZ7Be88Q',
+      ],
+    },
+  };
+
+  function extractYouTubeId(input) {
+    if (!input) return null;
+    if (/^[\w-]{11}$/.test(input)) return input;
+    const m = String(input).match(/(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/)|youtu\.be\/)([\w-]{11})/);
+    return m ? m[1] : null;
+  }
 
   let currentGallery = [];
   let currentIndex = 0;
   let currentGalleryTitle = '';
+  let isVideoGallery = false;
 
   async function openGallery(key) {
+    // YouTube-Galerie?
+    const yt = youtubeGalleries[key];
+    if (yt) {
+      openYouTubeGallery(yt);
+      return;
+    }
+
     const cfg = galleryConfig[key];
     if (!cfg) return;
+    isVideoGallery = false;
     currentGalleryTitle = cfg.title;
     document.getElementById('galleryTitle').textContent = cfg.title;
     document.getElementById('galleryImg').src = '';
     document.getElementById('galleryImg').alt = '';
+    document.getElementById('galleryImg').style.display = '';
+    document.getElementById('galleryIframe').style.display = 'none';
+    document.getElementById('galleryIframe').src = '';
     document.getElementById('galleryThumbs').innerHTML = '<p style="color:var(--gray);font-family:\'Barlow Condensed\';letter-spacing:0.1em;">Bilder werden geladen…</p>';
 
     const modal = document.getElementById('galleryModal');
     modal.classList.add('active');
+    modal.classList.remove('video-mode');
     modal.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
 
@@ -1510,13 +1566,50 @@
     }
   }
 
+  function openYouTubeGallery(yt) {
+    isVideoGallery = true;
+    currentGalleryTitle = yt.title;
+    document.getElementById('galleryTitle').textContent = yt.title;
+    document.getElementById('galleryImg').style.display = 'none';
+    document.getElementById('galleryImg').src = '';
+    document.getElementById('galleryIframe').style.display = '';
+    document.getElementById('galleryThumbs').innerHTML = '';
+
+    currentGallery = yt.videoIds.map(extractYouTubeId).filter(Boolean);
+
+    const modal = document.getElementById('galleryModal');
+    modal.classList.add('active', 'video-mode');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+
+    if (currentGallery.length === 0) {
+      document.getElementById('galleryThumbs').innerHTML = '<p style="color:var(--gray);font-family:\'Barlow Condensed\';letter-spacing:0.1em;">Noch keine Videos vorhanden.</p>';
+      return;
+    }
+    currentIndex = 0;
+    renderGallery();
+  }
+
   function renderGallery() {
-    const img = document.getElementById('galleryImg');
     const counter = document.getElementById('galleryCounter');
     const thumbsEl = document.getElementById('galleryThumbs');
+    counter.textContent = (currentIndex + 1) + ' / ' + currentGallery.length;
+
+    if (isVideoGallery) {
+      const iframe = document.getElementById('galleryIframe');
+      const id = currentGallery[currentIndex];
+      // youtube-nocookie.com → setzt erst beim Play Cookies (DSGVO-freundlicher)
+      iframe.src = `https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1`;
+      iframe.title = currentGalleryTitle + ' – Video ' + (currentIndex + 1);
+      thumbsEl.innerHTML = currentGallery.map((vid, i) =>
+        `<img class="gallery-thumb ${i === currentIndex ? 'active' : ''}" src="https://img.youtube.com/vi/${vid}/hqdefault.jpg" alt="Vorschau ${i + 1}" onclick="goToImage(${i})" loading="lazy">`
+      ).join('');
+      return;
+    }
+
+    const img = document.getElementById('galleryImg');
     img.src = currentGallery[currentIndex];
     img.alt = currentGalleryTitle + ' – Bild ' + (currentIndex + 1) + ' von ' + currentGallery.length;
-    counter.textContent = (currentIndex + 1) + ' / ' + currentGallery.length;
     thumbsEl.innerHTML = currentGallery.map((src, i) =>
       `<img class="gallery-thumb ${i === currentIndex ? 'active' : ''}" src="${src.replace('w_1400','w_120')}" alt="Vorschau ${i + 1}" onclick="goToImage(${i})" loading="lazy">`
     ).join('');
@@ -1572,8 +1665,13 @@
     const modal = document.getElementById('galleryModal');
     modal.classList.remove('active');
     modal.classList.remove('expanded');
+    modal.classList.remove('video-mode');
     modal.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
+    // YouTube-Video stoppen (sonst läuft Audio im Hintergrund weiter)
+    const iframe = document.getElementById('galleryIframe');
+    if (iframe) iframe.src = '';
+    isVideoGallery = false;
   }
 
   // ═══════════ SWIPE-GESTE für Galerie auf Touch-Geräten ═══════════
