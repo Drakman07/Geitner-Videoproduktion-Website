@@ -1,0 +1,3 @@
+# Dateien, die NICHT als statische Assets unter der öffentlichen URL ausgeliefert werden sollen
+README.md
+wrangler.jsonc
