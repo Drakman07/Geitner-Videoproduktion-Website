@@ -1,0 +1,13 @@
+# Claude Code Metadaten
+.claude/
+CLAUDE.md
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/
+
+# Logs
+*.log
