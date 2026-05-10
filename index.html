@@ -1169,6 +1169,13 @@
     transform: scale(1.08);
     filter: grayscale(0%) brightness(1) saturate(1.05);
   }
+  /* Touch-Geräte haben keinen Hover — wenn die Card im Viewport ist, kommt
+     sie automatisch in volle Farbe (siehe IntersectionObserver im JS). */
+  @media (hover: none) {
+    .leistung-card.in-view .leistung-img {
+      filter: grayscale(0%) brightness(1) saturate(1.05);
+    }
+  }
 
   /* ---- Film-Grain ---- */
   .film-grain {
@@ -1744,6 +1751,20 @@
       }
       renderGallery();
     }, { passive: true });
+  })();
+
+  // ═══════════ MOBILE: SERVICE-CARD „IN-VIEW" → volle Farbe ═══════════
+  // Touch-Geräte haben keinen Hover. Wenn eine Card im Viewport ist, kriegt sie
+  // .in-view → CSS schaltet das Bild auf Farbe (gleicher Effekt wie Desktop-Hover).
+  (function () {
+    const cards = document.querySelectorAll('.leistung-card');
+    if (cards.length === 0 || !('IntersectionObserver' in window)) return;
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        e.target.classList.toggle('in-view', e.isIntersecting);
+      });
+    }, { threshold: 0.5 });
+    cards.forEach(c => observer.observe(c));
   })();
 
   // ═══════════ SCROLL REVEALS ═══════════
