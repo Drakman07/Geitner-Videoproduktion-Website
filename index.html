@@ -618,6 +618,33 @@
     pointer-events: none !important;
   }
 
+  /* Status-Meldung (Erfolg/Fehler) */
+  .form-status {
+    margin-top: 1rem;
+    padding: 0.85rem 1rem;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    border: 1px solid;
+    display: none;
+    line-height: 1.5;
+  }
+  .form-status.show { display: block; }
+  .form-status.success {
+    border-color: rgba(70, 200, 120, 0.4);
+    color: #5fd99a;
+    background: rgba(70, 200, 120, 0.08);
+  }
+  .form-status.error {
+    border-color: var(--border-red);
+    color: var(--red);
+    background: var(--red-dim);
+  }
+  .form-submit:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
   /* ═══════════ FOOTER ═══════════ */
   footer {
     background: var(--dark);
@@ -1078,7 +1105,7 @@
         <a href="https://www.facebook.com/Geitner-Videoproduktion-101770381702429/" target="_blank" rel="noopener" class="social-btn">Facebook</a>
       </div>
     </div>
-    <form class="kontakt-form" action="https://formspree.io/f/mnjwjknz" method="POST">
+    <form class="kontakt-form" id="kontaktForm" action="https://formspree.io/f/mnjwjknz" method="POST">
       <div class="form-row">
         <div class="form-group">
           <label for="name">Name</label>
@@ -1103,6 +1130,7 @@
         <input type="text" id="_gotcha" name="_gotcha" tabindex="-1" autocomplete="off">
       </div>
       <button type="submit" class="form-submit">Anfrage absenden →</button>
+      <div class="form-status" id="formStatus" role="status" aria-live="polite"></div>
     </form>
   </div>
 </section>
@@ -1316,6 +1344,48 @@
       }
       renderGallery();
     }, { passive: true });
+  })();
+
+  // ═══════════ KONTAKTFORMULAR – Inline-Submit ═══════════
+  (function () {
+    const form = document.getElementById('kontaktForm');
+    const status = document.getElementById('formStatus');
+    const submitBtn = form.querySelector('.form-submit');
+    const originalBtnText = submitBtn.textContent;
+
+    function setStatus(type, message) {
+      status.className = 'form-status show ' + type;
+      status.textContent = message;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      status.className = 'form-status';
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Wird gesendet …';
+
+      try {
+        const res = await fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { Accept: 'application/json' }
+        });
+        if (res.ok) {
+          setStatus('success', 'Danke! Ihre Anfrage wurde gesendet – ich melde mich zeitnah bei Ihnen zurück.');
+          form.reset();
+        } else {
+          const data = await res.json().catch(() => ({}));
+          const msg = (data.errors && data.errors.map(er => er.message).join(', '))
+            || 'Senden fehlgeschlagen. Bitte versuchen Sie es später erneut oder schreiben Sie direkt eine E-Mail.';
+          setStatus('error', msg);
+        }
+      } catch {
+        setStatus('error', 'Verbindung fehlgeschlagen. Bitte prüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalBtnText;
+      }
+    });
   })();
 
   // ═══════════ SMOOTH SCROLL ═══════════
