@@ -610,7 +610,12 @@
   .social-btn:hover { border-color: var(--red); color: var(--red); }
 
   /* Form */
-  .kontakt-form { margin-top: 0.5rem; }
+  .kontakt-form {
+    margin-top: 0.5rem;
+    /* Anker-Sprung (Nav-CTA, Mobile-Menu „Anfrage senden", Hero „Projekt anfragen")
+       landet sonst unter der fixed Nav — Abstand nach oben einplanen. */
+    scroll-margin-top: 90px;
+  }
   .form-group {
     margin-bottom: 1.2rem;
   }
@@ -1011,6 +1016,9 @@
     .hamburger { display: flex; }
     .hero { padding: 0 1.5rem 4rem; }
     section { padding: 5rem 1.5rem; }
+    /* Extra Spielraum nach dem Form, damit der Anker-Sprung „Anfrage senden"
+       das Form sauber unter die Nav scrollen kann (sonst cappt der Browser am Body-Ende). */
+    .kontakt { padding-bottom: 8.5rem; }
     .leistungen-header { grid-template-columns: 1fr; }
     .leistungen-grid { grid-template-columns: 1fr; }
     .leistung-card.wide { grid-column: span 1; }
@@ -1231,7 +1239,7 @@
     <li><a href="#ueber">Über mich</a></li>
     <li><a href="#kontakt">Kontakt</a></li>
   </ul>
-  <a href="#kontakt" class="nav-cta">Anfrage senden</a>
+  <a href="#kontaktForm" class="nav-cta">Anfrage senden</a>
   <button class="hamburger" id="hamBtn" aria-label="Menü öffnen" aria-expanded="false" aria-controls="mobileMenu">
     <span></span><span></span><span></span>
   </button>
@@ -1246,7 +1254,7 @@
     <p class="hero-sub">Professionelle Videoproduktion und Fotografie für Unternehmen, Kommunen und Privatpersonen in der Region.</p>
     <div class="hero-actions">
       <a href="#leistungen" class="btn-primary">Leistungen ansehen</a>
-      <a href="#kontakt" class="btn-ghost">Projekt anfragen</a>
+      <a href="#kontaktForm" class="btn-ghost">Projekt anfragen</a>
     </div>
   </div>
   <div class="hero-scroll" aria-hidden="true">Scrollen</div>
@@ -1442,7 +1450,7 @@
   <a href="#leistungen" class="mobile-nav-link">Leistungen</a>
   <a href="#ueber" class="mobile-nav-link">Über mich</a>
   <a href="#kontakt" class="mobile-nav-link">Kontakt</a>
-  <a href="#kontakt" class="mobile-nav-link" style="color:var(--red);">Anfrage senden</a>
+  <a href="#kontaktForm" class="mobile-nav-link" style="color:var(--red);">Anfrage senden</a>
 </div>
 
 <!-- GALLERY MODAL -->
@@ -1800,14 +1808,28 @@
     });
   })();
 
-  // ═══════════ SMOOTH SCROLL ═══════════
+  // ═══════════ SMOOTH SCROLL (mit Nav-Offset, damit Anker nicht unter fixer Nav landen) ═══════════
   document.querySelectorAll('a[href^="#"]').forEach(a => {
     a.addEventListener('click', e => {
-      const target = document.querySelector(a.getAttribute('href'));
-      if (target) {
-        e.preventDefault();
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+      const href = a.getAttribute('href');
+      if (!href || href === '#') return;
+      const target = document.querySelector(href);
+      if (!target) return;
+      e.preventDefault();
+      // Noch nicht sichtbare .reveal-Elemente sofort einblenden — sonst „schrumpft"
+      // das Layout während des Scrolls (translateY(28px) → 0) und das Ziel landet
+      // hinter der Nav. Transition kurz ausschalten, damit der Layout-Sprung sofort
+      // greift und getBoundingClientRect die echte Endposition liefert.
+      const reveals = document.querySelectorAll('.reveal:not(.visible)');
+      reveals.forEach(el => { el.style.transition = 'none'; el.classList.add('visible'); });
+      void document.body.offsetHeight; // erzwingt Reflow
+      const navEl = document.getElementById('navbar');
+      const navHeight = navEl ? navEl.offsetHeight : 80;
+      const offset = navHeight + 12;
+      const top = window.scrollY + target.getBoundingClientRect().top - offset;
+      window.scrollTo({ top, behavior: 'smooth' });
+      // Inline-Transition wieder freigeben, damit zukünftige Reveals normal animieren
+      setTimeout(() => { reveals.forEach(el => { el.style.transition = ''; }); }, 100);
     });
   });
 
