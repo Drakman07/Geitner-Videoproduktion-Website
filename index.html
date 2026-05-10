@@ -285,13 +285,23 @@
     display: block;
   }
   .hero-sub {
+    position: relative;
+    display: inline-block;
     font-size: 1rem;
-    font-weight: 300;
-    color: var(--gray-light);
+    font-weight: 400;
+    color: var(--off-white);
     max-width: 440px;
     margin-bottom: 2.5rem;
-    line-height: 1.8;
-    text-shadow: 0 2px 12px rgba(0,0,0,0.7);
+    padding: 0.6rem 1rem 0.6rem 1rem;
+    line-height: 1.7;
+    text-shadow:
+      0 0 6px rgba(0,0,0,0.95),
+      0 0 14px rgba(0,0,0,0.7),
+      0 2px 6px rgba(0,0,0,0.8);
+    background: linear-gradient(to right, rgba(13,13,13,0.55) 0%, rgba(13,13,13,0.4) 60%, rgba(13,13,13,0.15) 100%);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    border-left: 2px solid rgba(200,16,46,0.6);
   }
   .hero-actions {
     display: flex;
