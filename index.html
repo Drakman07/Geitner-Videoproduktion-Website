@@ -231,14 +231,15 @@
     animation: kenBurns 25s ease-in-out infinite alternate;
     will-change: transform;
   }
-  /* Gradient-Overlay statisch oben drauf */
+  /* Gradient-Overlay statisch oben drauf — unten stärker abgedunkelt für Lesbarkeit
+     des Subtextes & der Buttons über hellen Video-Frames (Wasser/Boote etc.) */
   .hero-bg::after {
     content: '';
     position: absolute;
     inset: 0;
     background:
       linear-gradient(to right, rgba(13,13,13,0.85) 50%, rgba(13,13,13,0.3)),
-      linear-gradient(to top, rgba(13,13,13,1) 0%, rgba(13,13,13,0.2) 60%);
+      linear-gradient(to top, rgba(13,13,13,0.95) 0%, rgba(13,13,13,0.55) 35%, rgba(13,13,13,0.2) 65%);
   }
   /* Hero-Video-Tausch: Wenn später ein <video class="hero-bg-video" autoplay muted loop playsinline>
      in <div class="hero-bg"> eingefügt wird, blendet das Bild oben automatisch aus. */
@@ -276,6 +277,7 @@
     letter-spacing: 0.02em;
     color: var(--white);
     margin-bottom: 2rem;
+    text-shadow: 0 2px 16px rgba(0,0,0,0.55);
   }
   .hero h1 em {
     font-style: normal;
@@ -289,6 +291,7 @@
     max-width: 440px;
     margin-bottom: 2.5rem;
     line-height: 1.8;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.7);
   }
   .hero-actions {
     display: flex;
@@ -316,7 +319,11 @@
     color: var(--off-white);
     text-decoration: none;
     padding: 0.85rem 2rem;
-    border: 1px solid rgba(255,255,255,0.25);
+    border: 1px solid rgba(255,255,255,0.45);
+    background: rgba(13,13,13,0.35);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    text-shadow: 0 1px 6px rgba(0,0,0,0.5);
     transition: all 0.2s;
   }
   .btn-ghost:hover { border-color: var(--white); }
@@ -1164,17 +1171,18 @@
   /* ---- Card-Reveal: Grayscale → Color ---- */
   .leistung-img {
     filter: grayscale(55%) brightness(0.78) saturate(0.9);
+    /* sanfter Übergang beim Hover (Desktop) UND beim Reinscrollen (Mobile via .in-view) */
+    transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1), filter 0.5s ease;
   }
   .leistung-card:hover .leistung-img {
     transform: scale(1.08);
     filter: grayscale(0%) brightness(1) saturate(1.05);
   }
-  /* Touch-Geräte haben keinen Hover — wenn die Card im Viewport ist, kommt
-     sie automatisch in volle Farbe (siehe IntersectionObserver im JS). */
-  @media (hover: none) {
-    .leistung-card.in-view .leistung-img {
-      filter: grayscale(0%) brightness(1) saturate(1.05);
-    }
+  /* Card im Viewport (per IntersectionObserver gesetzt) → volle Farbe.
+     Universell, nicht @media-gated — auf Desktop konkurriert :hover mit gleichem
+     Effekt (konsistent), auf Mobile/Touch ist das die einzige Trigger-Möglichkeit. */
+  .leistung-card.in-view .leistung-img {
+    filter: grayscale(0%) brightness(1) saturate(1.05);
   }
 
   /* ---- Film-Grain ---- */
@@ -1256,10 +1264,25 @@
 <section class="hero" id="home">
   <div class="hero-bg" role="img" aria-label="Cineastische Drohnen- und Roadtrip-Aufnahmen aus einer Geitner-Videoproduktion">
     <video class="hero-bg-video" autoplay muted loop playsinline preload="auto"
-           poster="https://res.cloudinary.com/dgxclkj2u/image/upload/q_auto,f_auto,w_1800/20230731_060207_mt4alq.jpg">
+           poster="https://res.cloudinary.com/dgxclkj2u/image/upload/q_auto,f_auto,w_1800/20230731_060207_mt4alq.jpg"
+           data-src-mobile="https://res.cloudinary.com/dgxclkj2u/video/upload/c_fill,w_640,h_1138,g_auto/Hero_Final_Mix_jjkfex.mp4">
       <source src="https://res.cloudinary.com/dgxclkj2u/video/upload/Hero_Final_Mix_jjkfex.mp4" type="video/mp4">
     </video>
   </div>
+  <script>
+    // Auf Mobile (Viewport ≤ 768px) wird Cloudinary's on-fly 9:16-Crop genutzt
+    // (c_fill,w_640,h_1138,g_auto) — vermeidet zu starkes center-cropping des
+    // 16:9-Source-Videos. Inline-Script läuft vor dem ersten Video-Loading.
+    (function () {
+      var v = document.querySelector('.hero-bg-video');
+      if (!v) return;
+      if (window.matchMedia('(max-width: 768px)').matches && v.dataset.srcMobile) {
+        var s = v.querySelector('source');
+        s.src = v.dataset.srcMobile;
+        v.load();
+      }
+    })();
+  </script>
   <div style="position:relative; z-index:1;">
     <p class="hero-badge">Neumarkt i.d.OPf. · Bayern</p>
     <h1 data-split>BILD <em>UND</em> BEWEGUNG</h1>
@@ -1758,9 +1781,11 @@
     }, { passive: true });
   })();
 
-  // ═══════════ MOBILE: SERVICE-CARD „IN-VIEW" → volle Farbe ═══════════
-  // Touch-Geräte haben keinen Hover. Wenn eine Card im Viewport ist, kriegt sie
-  // .in-view → CSS schaltet das Bild auf Farbe (gleicher Effekt wie Desktop-Hover).
+  // ═══════════ SERVICE-CARD „IN-VIEW" → volle Farbe ═══════════
+  // Sobald eine Card ins mittlere 60 % des Viewports kommt, kriegt sie .in-view →
+  // CSS schaltet das Bild auf Farbe. Universell (kein @media-Gating), greift auch
+  // auf Mobile zuverlässig (frühere @media (hover: none)-Variante hatte auf
+  // manchen Hybrid-Geräten Probleme).
   (function () {
     const cards = document.querySelectorAll('.leistung-card');
     if (cards.length === 0 || !('IntersectionObserver' in window)) return;
@@ -1768,7 +1793,7 @@
       entries.forEach(e => {
         e.target.classList.toggle('in-view', e.isIntersecting);
       });
-    }, { threshold: 0.5 });
+    }, { threshold: 0, rootMargin: '-20% 0px -20% 0px' });
     cards.forEach(c => observer.observe(c));
   })();
 
