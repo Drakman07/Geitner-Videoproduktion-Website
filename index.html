@@ -284,24 +284,16 @@
     color: var(--red);
     display: block;
   }
-  .hero-sub {
-    position: relative;
-    display: inline-block;
-    font-size: 1rem;
+  /* Lead-Text der Leistungen-Section (war frueher Hero-Subtext, ist jetzt
+     auf dunklem Section-Background wo er auch klar lesbar ist) */
+  .leistungen-lead {
+    font-family: 'Barlow', sans-serif;
+    font-size: 1.15rem;
     font-weight: 400;
     color: var(--off-white);
-    max-width: 440px;
-    margin-bottom: 2.5rem;
-    padding: 0.6rem 1rem 0.6rem 1rem;
-    line-height: 1.7;
-    text-shadow:
-      0 0 6px rgba(0,0,0,0.95),
-      0 0 14px rgba(0,0,0,0.7),
-      0 2px 6px rgba(0,0,0,0.8);
-    background: linear-gradient(to right, rgba(13,13,13,0.55) 0%, rgba(13,13,13,0.4) 60%, rgba(13,13,13,0.15) 100%);
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
-    border-left: 2px solid rgba(200,16,46,0.6);
+    line-height: 1.6;
+    margin-bottom: 1.1rem;
+    max-width: 480px;
   }
   .hero-actions {
     display: flex;
@@ -1296,7 +1288,6 @@
   <div style="position:relative; z-index:1;">
     <p class="hero-badge">Neumarkt i.d.OPf. · Bayern</p>
     <h1 data-split>BILD <em>UND</em> BEWEGUNG</h1>
-    <p class="hero-sub">Professionelle Videoproduktion und Fotografie für Unternehmen, Kommunen und Privatpersonen in der Region.</p>
     <div class="hero-actions">
       <a href="#leistungen" class="btn-primary">Leistungen ansehen</a>
       <a href="#kontaktForm" class="btn-ghost">Projekt anfragen</a>
@@ -1312,7 +1303,10 @@
       <p class="section-label">Was ich biete</p>
       <h2 class="section-title">LEISTUNGEN</h2>
     </div>
-    <p class="section-sub reveal">Von der Idee bis zum fertigen Film – ich begleite Ihr Projekt von der ersten Planung bis zur Auslieferung.</p>
+    <div class="reveal">
+      <p class="leistungen-lead">Professionelle Videoproduktion und Fotografie für Unternehmen, Kommunen und Privatpersonen in der Region.</p>
+      <p class="section-sub">Von der Idee bis zum fertigen Film – ich begleite Ihr Projekt von der ersten Planung bis zur Auslieferung.</p>
+    </div>
   </div>
   <div class="leistungen-grid">
     <div class="leistung-card wide has-gallery reveal" onclick="openGallery('videos')">
