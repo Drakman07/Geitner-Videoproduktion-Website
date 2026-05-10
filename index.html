@@ -815,18 +815,31 @@
     color: var(--white);
   }
   .gallery-close {
-    background: none;
-    border: none;
+    position: fixed;
+    top: 1.1rem;
+    right: 1.1rem;
+    z-index: 10;
+    background: rgba(13, 13, 13, 0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+    padding: 0.55rem 1rem;
     cursor: pointer;
     font-family: 'Barlow Condensed', sans-serif;
-    letter-spacing: 0.1em;
+    font-size: 0.78rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
     display: flex;
     align-items: center;
     gap: 0.4rem;
     color: var(--gray-light);
-    transition: color 0.2s;
+    transition: color 0.2s, background 0.2s, border-color 0.2s;
   }
-  .gallery-close:hover { color: var(--white); }
+  .gallery-close:hover {
+    color: var(--white);
+    background: rgba(200, 16, 46, 0.18);
+    border-color: var(--red);
+  }
   .gallery-close::before { content: '✕  '; color: var(--red); }
   .gallery-main {
     width: 100%;
@@ -1434,9 +1447,10 @@
 
 <!-- GALLERY MODAL -->
 <div class="gallery-overlay" id="galleryModal" role="dialog" aria-modal="true" aria-labelledby="galleryTitle" aria-hidden="true">
+  <!-- Schließen-Button: fix oben rechts, bleibt sichtbar bei jedem Bildformat -->
+  <button class="gallery-close" id="galleryClose" aria-label="Galerie schließen">Schließen</button>
   <div class="gallery-header">
     <p class="gallery-title" id="galleryTitle">GALERIE</p>
-    <button class="gallery-close" id="galleryClose" aria-label="Galerie schließen">Schließen</button>
   </div>
   <div class="gallery-main">
     <button class="gallery-nav gallery-prev" id="galleryPrev" aria-label="Vorheriges Bild">&#8592;</button>
@@ -1524,15 +1538,19 @@
   let isVideoGallery = false;
 
   async function openGallery(key) {
-    // YouTube-Galerie?
     const yt = youtubeGalleries[key];
+    const cfg = galleryConfig[key];
+    if (!yt && !cfg) return;
+
+    // History-Eintrag pushen → Hardware-Zurück-Taste schließt Modal statt Seite zu verlassen
+    if (!history.state || !history.state.galleryOpen) {
+      history.pushState({ galleryOpen: true }, '');
+    }
+
     if (yt) {
       openYouTubeGallery(yt);
       return;
     }
-
-    const cfg = galleryConfig[key];
-    if (!cfg) return;
     isVideoGallery = false;
     currentGalleryTitle = cfg.title;
     document.getElementById('galleryTitle').textContent = cfg.title;
@@ -1661,7 +1679,18 @@
       }
     }
   });
+  // Wird via UI-Klick (Schließen-Button, ESC, Klick außerhalb) aufgerufen.
+  // Wenn history-Eintrag gesetzt → history.back() triggern, popstate-Handler schließt dann.
+  // So wird der History-Stack sauber aufgeräumt — kein Doppel-Back-Drücken nötig.
   function closeGallery() {
+    if (history.state && history.state.galleryOpen) {
+      history.back();
+    } else {
+      closeGalleryNow();
+    }
+  }
+
+  function closeGalleryNow() {
     const modal = document.getElementById('galleryModal');
     modal.classList.remove('active');
     modal.classList.remove('expanded');
@@ -1673,6 +1702,14 @@
     if (iframe) iframe.src = '';
     isVideoGallery = false;
   }
+
+  // Hardware-Zurück-Taste (Mobile) / Browser-Back schließt Modal, statt Seite zu verlassen
+  window.addEventListener('popstate', () => {
+    const modal = document.getElementById('galleryModal');
+    if (modal && modal.classList.contains('active')) {
+      closeGalleryNow();
+    }
+  });
 
   // ═══════════ SWIPE-GESTE für Galerie auf Touch-Geräten ═══════════
   (function () {
