@@ -1704,8 +1704,12 @@
         function splitTextNodes(node) {
           Array.from(node.childNodes).forEach(child => {
             if (child.nodeType === Node.TEXT_NODE) {
+              // Leading/Trailing-Whitespace trimmen — sonst erzeugen sie sichtbare
+              // nbsp-Spans direkt vor/nach Block-Elementen wie <em>.
+              const text = child.textContent.trim();
+              if (!text) { child.remove(); return; }
               const frag = document.createDocumentFragment();
-              for (const ch of child.textContent) {
+              for (const ch of text) {
                 const span = document.createElement('span');
                 span.className = 'char-reveal';
                 span.style.setProperty('--char-delay', (baseDelay + charIndex * 30) + 'ms');
