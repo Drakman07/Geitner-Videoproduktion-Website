@@ -99,6 +99,28 @@
     overflow-x: hidden;
     font-weight: 300;
     line-height: 1.7;
+    position: relative;
+  }
+
+  /* ═══════════ PAGE THREAD (vertikaler Faden) ═══════════ */
+  .page-thread {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 1px;
+    height: 100%;
+    background: linear-gradient(
+      to bottom,
+      rgba(200, 16, 46, 0.55) 0%,
+      rgba(200, 16, 46, 0.10) 18%,
+      rgba(200, 16, 46, 0.35) 38%,
+      rgba(200, 16, 46, 0.10) 58%,
+      rgba(200, 16, 46, 0.40) 78%,
+      rgba(200, 16, 46, 0.55) 95%,
+      transparent 100%
+    );
+    pointer-events: none;
+    z-index: 1;
   }
 
   /* ═══════════ NAVIGATION ═══════════ */
@@ -202,14 +224,6 @@
       linear-gradient(to right, rgba(13,13,13,0.85) 50%, rgba(13,13,13,0.3)),
       linear-gradient(to top, rgba(13,13,13,1) 0%, rgba(13,13,13,0.2) 60%),
       url('https://res.cloudinary.com/dgxclkj2u/image/upload/q_auto,f_auto,w_1800/20230731_060207_mt4alq.jpg') center/cover;
-  }
-  .hero-accent-line {
-    position: absolute;
-    top: 0; right: 0;
-    width: 2px;
-    height: 100%;
-    background: linear-gradient(to bottom, transparent, var(--red), transparent);
-    opacity: 0.4;
   }
   .hero-badge {
     font-family: 'Barlow Condensed', sans-serif;
@@ -361,11 +375,13 @@
   }
   .leistung-card {
     background: var(--dark);
-    padding: 2.5rem 2rem;
+    padding: 0 2rem 2rem;
     position: relative;
     overflow: hidden;
     cursor: default;
     transition: background 0.3s;
+    display: flex;
+    flex-direction: column;
   }
   .leistung-card::before {
     content: '';
@@ -376,6 +392,7 @@
     transform: scaleX(0);
     transform-origin: left;
     transition: transform 0.4s ease;
+    z-index: 2;
   }
   .leistung-card:hover { background: var(--dark-2); }
   .leistung-card:hover::before { transform: scaleX(1); }
@@ -385,13 +402,19 @@
     display: block;
   }
   .leistung-img {
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    object-fit: cover;
-    margin-bottom: 1.5rem;
     display: block;
-    border: 2px solid var(--border-red);
+    width: calc(100% + 4rem);
+    margin: 0 -2rem 1.8rem;
+    height: 220px;
+    object-fit: cover;
+    border-radius: 0;
+    border: none;
+    transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1), filter 0.5s ease;
+    filter: brightness(0.92) saturate(0.95);
+  }
+  .leistung-card:hover .leistung-img {
+    transform: scale(1.05);
+    filter: brightness(1) saturate(1);
   }
   .leistung-number {
     font-family: 'Bebas Neue', sans-serif;
@@ -399,9 +422,10 @@
     color: rgba(255,255,255,0.04);
     position: absolute;
     bottom: -0.8rem;
-    right: 1rem;
+    right: 1.2rem;
     line-height: 1;
     pointer-events: none;
+    z-index: 1;
   }
   .leistung-card h3 {
     font-family: 'Bebas Neue', sans-serif;
@@ -415,6 +439,7 @@
     color: var(--gray);
     line-height: 1.7;
   }
+  .leistung-card .gallery-btn { align-self: flex-start; }
 
   /* ═══════════ ABOUT ═══════════ */
   .about { background: var(--dark); }
@@ -526,11 +551,12 @@
   }
   .kontakt-item-label {
     font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.7rem;
-    letter-spacing: 0.2em;
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: var(--gray);
-    margin-bottom: 0.3rem;
+    color: var(--gray-light);
+    margin-bottom: 0.35rem;
   }
   .kontakt-item-value {
     font-size: 0.95rem;
@@ -565,11 +591,12 @@
   .form-group label {
     display: block;
     font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.7rem;
-    letter-spacing: 0.2em;
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: var(--gray);
-    margin-bottom: 0.5rem;
+    color: var(--gray-light);
+    margin-bottom: 0.55rem;
   }
   .form-group input,
   .form-group textarea {
@@ -616,6 +643,32 @@
     height: 1px !important;
     opacity: 0 !important;
     pointer-events: none !important;
+  }
+
+  /* ═══════════ SCROLL REVEALS ═══════════ */
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity, transform;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  /* Stagger für Service-Cards (Wave-Effekt pro Reihe) */
+  .leistung-card.reveal:nth-child(2) { transition-delay: 80ms; }
+  .leistung-card.reveal:nth-child(3) { transition-delay: 160ms; }
+  .leistung-card.reveal:nth-child(4) { transition-delay: 240ms; }
+  .leistung-card.reveal:nth-child(6) { transition-delay: 80ms; }
+  .leistung-card.reveal:nth-child(7) { transition-delay: 160ms; }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
   }
 
   /* Status-Meldung (Erfolg/Fehler) */
@@ -931,6 +984,8 @@
 </head>
 <body>
 
+<div class="page-thread" aria-hidden="true"></div>
+
 <!-- NAVIGATION -->
 <nav id="navbar">
   <a href="#home" class="nav-logo" aria-label="Startseite">
@@ -950,7 +1005,6 @@
 <!-- HERO -->
 <section class="hero" id="home">
   <div class="hero-bg" role="img" aria-label="Cineastische Aufnahme aus einer Geitner-Videoproduktion"></div>
-  <div class="hero-accent-line" aria-hidden="true"></div>
   <div style="position:relative; z-index:1;">
     <p class="hero-badge">Neumarkt i.d.OPf. · Bayern</p>
     <h1>BILD <em>UND</em> BEWEGUNG</h1>
@@ -966,56 +1020,56 @@
 <!-- LEISTUNGEN -->
 <section class="leistungen" id="leistungen">
   <div class="leistungen-header">
-    <div>
+    <div class="reveal">
       <p class="section-label">Was ich biete</p>
       <h2 class="section-title">LEISTUNGEN</h2>
     </div>
-    <p class="section-sub">Von der Idee bis zum fertigen Film – ich begleite Ihr Projekt von der ersten Planung bis zur Auslieferung.</p>
+    <p class="section-sub reveal">Von der Idee bis zum fertigen Film – ich begleite Ihr Projekt von der ersten Planung bis zur Auslieferung.</p>
   </div>
   <div class="leistungen-grid">
-    <div class="leistung-card wide has-gallery" onclick="openGallery('videos')">
+    <div class="leistung-card wide has-gallery reveal" onclick="openGallery('videos')">
       <img class="leistung-img" src="https://res.cloudinary.com/dgxclkj2u/image/upload/v1777831105/Highlight_Cover_Videos_BTS_bllaqz.png" alt="Videos und Behind-the-Scenes" loading="lazy">
       <h3>Videos &amp; BTS</h3>
       <p>Imagefilme, Werbevideos und Behind-the-Scenes-Content – authentisch, emotional und auf den Punkt inszeniert.</p>
       <button class="gallery-btn" type="button">Galerie ansehen</button>
       <span class="leistung-number" aria-hidden="true">01</span>
     </div>
-    <div class="leistung-card has-gallery" onclick="openGallery('business')">
+    <div class="leistung-card has-gallery reveal" onclick="openGallery('business')">
       <img class="leistung-img" src="https://res.cloudinary.com/dgxclkj2u/image/upload/v1777831104/Highlight_Cover_Business_Firmen_ngjlb3.png" alt="Business und Firmen" loading="lazy">
       <h3>Business &amp; Firmen</h3>
       <p>Professionelle Unternehmensvideos und Fotos, die Ihre Marke stark positionieren.</p>
       <button class="gallery-btn" type="button">Galerie ansehen</button>
       <span class="leistung-number" aria-hidden="true">02</span>
     </div>
-    <div class="leistung-card has-gallery" onclick="openGallery('autos')">
+    <div class="leistung-card has-gallery reveal" onclick="openGallery('autos')">
       <img class="leistung-img" src="https://res.cloudinary.com/dgxclkj2u/image/upload/v1777831103/Highlight_Cover_Autos_lhn01q.png" alt="Autos" loading="lazy">
       <h3>Autos</h3>
       <p>Cineastische Fahrzeugvideos mit emotionaler Bildsprache – für Händler, Sammler und Liebhaber.</p>
       <button class="gallery-btn" type="button">Galerie ansehen</button>
       <span class="leistung-number" aria-hidden="true">03</span>
     </div>
-    <div class="leistung-card has-gallery" onclick="openGallery('portrait')">
+    <div class="leistung-card has-gallery reveal" onclick="openGallery('portrait')">
       <img class="leistung-img" src="https://res.cloudinary.com/dgxclkj2u/image/upload/v1777831105/Hightlight_Cover_Potrait_vtk0gs.png" alt="Portrait" loading="lazy">
       <h3>Portrait</h3>
       <p>Ausdrucksstarke Portraitfotos und -videos für Künstler, Unternehmer und Privatpersonen.</p>
       <button class="gallery-btn" type="button">Galerie ansehen</button>
       <span class="leistung-number" aria-hidden="true">04</span>
     </div>
-    <div class="leistung-card has-gallery" onclick="openGallery('drohne')">
+    <div class="leistung-card has-gallery reveal" onclick="openGallery('drohne')">
       <img class="leistung-img" src="https://res.cloudinary.com/dgxclkj2u/image/upload/v1777831106/Highlight_Cover_Drohne_ibvdue.png" alt="Drohne" loading="lazy">
       <h3>Drohne</h3>
       <p>Spektakuläre Luftaufnahmen mit lizenzierter Drohnentechnik für einzigartige Perspektiven.</p>
       <button class="gallery-btn" type="button">Galerie ansehen</button>
       <span class="leistung-number" aria-hidden="true">05</span>
     </div>
-    <div class="leistung-card has-gallery" onclick="openGallery('kommunen')">
+    <div class="leistung-card has-gallery reveal" onclick="openGallery('kommunen')">
       <img class="leistung-img" src="https://res.cloudinary.com/dgxclkj2u/image/upload/v1777831104/Highlight_Cover_kommunen_zsgi4v.png" alt="Kommunen" loading="lazy">
       <h3>Kommunen</h3>
       <p>Imagefilme und Dokumentationen für Gemeinden, Städte und öffentliche Einrichtungen.</p>
       <button class="gallery-btn" type="button">Galerie ansehen</button>
       <span class="leistung-number" aria-hidden="true">06</span>
     </div>
-    <div class="leistung-card wide has-gallery" onclick="openGallery('natur')">
+    <div class="leistung-card wide has-gallery reveal" onclick="openGallery('natur')">
       <img class="leistung-img" src="https://res.cloudinary.com/dgxclkj2u/image/upload/v1777831105/Highlight_Natur_Landschaft_bacitb.png" alt="Natur und Landschaft" loading="lazy">
       <h3>Natur &amp; Landschaft</h3>
       <p>Die Schönheit der Region in Szene gesetzt – von der Oberpfälzer Hügellandschaft bis zu den Alpen.</p>
@@ -1028,7 +1082,7 @@
 <!-- ÜBER MICH -->
 <section class="about" id="ueber">
   <div class="about-inner">
-    <div class="about-img-wrap">
+    <div class="about-img-wrap reveal">
       <img class="about-img"
         src="https://res.cloudinary.com/dgxclkj2u/image/upload/v1777830633/A7U00644_-_Kopie_s8sicl.jpg"
         alt="Alexander Geitner – Kameramann und Filmemacher"
@@ -1053,7 +1107,7 @@
       </div>
       <div class="about-img-label">Kameramann</div>
     </div>
-    <div class="about-body">
+    <div class="about-body reveal">
       <p class="section-label">Über mich</p>
       <h2 class="section-title">ALEXANDER<br>GEITNER</h2>
       <p>Ich bin Kameramann, Filmemacher und Videoproduzent aus dem Raum Neumarkt i.d.OPf. Die Leidenschaft für Bild und Bewegung begleitet mich seit Jahren – und treibt mich an, mit jedem Projekt besser zu werden.</p>
@@ -1073,9 +1127,9 @@
 <!-- KONTAKT -->
 <section class="kontakt" id="kontakt">
   <div class="kontakt-inner">
-    <div>
+    <div class="reveal">
       <p class="section-label">Projekt starten</p>
-      <h2 class="section-title">LET'S<br>WORK<br>TOGETHER</h2>
+      <h2 class="section-title">IHRE GESCHICHTE.<br>MEIN<br>HANDWERK.</h2>
       <div class="kontakt-info">
         <div class="kontakt-item">
           <div class="kontakt-item-icon" aria-hidden="true">✉</div>
@@ -1105,7 +1159,7 @@
         <a href="https://www.facebook.com/Geitner-Videoproduktion-101770381702429/" target="_blank" rel="noopener" class="social-btn">Facebook</a>
       </div>
     </div>
-    <form class="kontakt-form" id="kontaktForm" action="https://formspree.io/f/mnjwjknz" method="POST">
+    <form class="kontakt-form reveal" id="kontaktForm" action="https://formspree.io/f/mnjwjknz" method="POST">
       <div class="form-row">
         <div class="form-group">
           <label for="name">Name</label>
@@ -1344,6 +1398,26 @@
       }
       renderGallery();
     }, { passive: true });
+  })();
+
+  // ═══════════ SCROLL REVEALS ═══════════
+  (function () {
+    const revealEls = document.querySelectorAll('.reveal');
+    if (revealEls.length === 0) return;
+    if (!('IntersectionObserver' in window)
+        || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      revealEls.forEach(el => el.classList.add('visible'));
+      return;
+    }
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+    revealEls.forEach(el => observer.observe(el));
   })();
 
   // ═══════════ KONTAKTFORMULAR – Inline-Submit ═══════════
